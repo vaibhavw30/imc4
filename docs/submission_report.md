@@ -1,7 +1,7 @@
 # Round 1 Submission Report
 
 **Date:** 2026-04-17
-**File to upload:** `dist/trader.py` (18,179 bytes, 471 lines)
+**File to upload:** `dist/bigballers.py` (18,179 bytes, 471 lines)
 **Generated from:** modular source at `algo/*` via `scripts/flatten.py`
 **Strategy:** unchanged from Sprint 1 — shipping v1 as diagnosed
 
@@ -16,7 +16,7 @@
 | `--match-trades all` (default) | **101,414** | 1.343 | 2.68% |
 | `--match-trades worse` | **117,616** | 1.835 | 2.68% |
 
-Flat `dist/trader.py` matches modular `algo/trader.py` **to the cent** under both matchers.
+Flat `dist/bigballers.py` matches modular `algo/trader.py` **to the cent** under both matchers.
 
 ### Per-product per-day breakdown (match-trades all)
 
@@ -52,7 +52,7 @@ From `docs/diagnostic_round_2.md` (numbers after a 50% haircut for live-vs-pract
 
 ## 3. Upload instructions
 
-1. File location: `/Users/vaibhav.wudaru/imc4/dist/trader.py`.
+1. File location: `/Users/vaibhav.wudaru/imc4/dist/bigballers.py`.
 2. Submit via IMC's Round 1 upload form — single-file, no external dependencies beyond `datamodel` (which IMC provides).
 3. After IMC runs its internal backtest, compare against the numbers in §1. They may not match exactly (IMC's matcher could differ from `prosperity4btest`), but they should be the same order of magnitude.
 

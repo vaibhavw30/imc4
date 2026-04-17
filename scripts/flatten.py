@@ -23,7 +23,7 @@ SOURCES: list[tuple[str, Path]] = [
     ("Trader", REPO_ROOT / "algo" / "trader.py"),
 ]
 
-OUTPUT = REPO_ROOT / "dist" / "trader.py"
+OUTPUT = REPO_ROOT / "dist" / "bigballers.py"
 
 HEADER = '''"""IMC Prosperity 4 - Round 1 submission (flat single-file build).
 

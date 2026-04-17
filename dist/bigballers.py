@@ -349,6 +349,22 @@ PEPPER_BASE_QUOTE_SIZE = 12
 # presumed to be a designated market maker (and thus near fair value).
 PEPPER_WALL_VOLUME = 15
 
+# ---- EMA drift overlay ----
+
+# Smoothing factor for the wall_mid EMA. 0.005 ≈ ~200-tick half-life,
+# slow enough to ignore tick noise, persistent enough to stay on the
+# correct side of a sustained intra-day drift.
+PEPPER_EMA_ALPHA = 0.005
+
+# Minimum |wall_mid - ema| (in ticks) before the directional bias kicks
+# in. Calibrated for live-scale noise (std≈29): 8 ≈ 0.28σ, so below
+# this we treat the gap as noise; above it we treat it as real drift.
+PEPPER_DRIFT_THRESHOLD = 8.0
+
+# Extra quote size added on the drift-favored side (units). Deliberately
+# modest so whipsaw damage is bounded relative to v1's base_size=12.
+PEPPER_DRIFT_BIAS_SIZE = 8
+
 
 class PepperRootStrategy(Strategy):
     def __init__(
@@ -360,6 +376,9 @@ class PepperRootStrategy(Strategy):
         max_extra_band: int = PEPPER_MAX_EXTRA_BAND,
         base_size: int = PEPPER_BASE_QUOTE_SIZE,
         wall_volume: int = PEPPER_WALL_VOLUME,
+        ema_alpha: float = PEPPER_EMA_ALPHA,
+        drift_threshold: float = PEPPER_DRIFT_THRESHOLD,
+        drift_bias_size: int = PEPPER_DRIFT_BIAS_SIZE,
     ):
         super().__init__(symbol, position_limit)
         self.min_edge = min_edge
@@ -367,6 +386,11 @@ class PepperRootStrategy(Strategy):
         self.max_extra_band = max_extra_band
         self.base_size = base_size
         self.wall_volume = wall_volume
+        self.ema_alpha = ema_alpha
+        self.drift_threshold = drift_threshold
+        self.drift_bias_size = drift_bias_size
+        # Per-day EMA state; seeded lazily on the first usable tick.
+        self._ema_fair: float | None = None
 
     def run(self, state: TradingState) -> list[Order]:
         if self.symbol not in state.order_depths:
@@ -383,6 +407,20 @@ class PepperRootStrategy(Strategy):
             fair = mid_price(order_depth)
         if fair is None:
             return []  # book is unusable this tick — sit out
+
+        # Reset EMA at the start of each trading day. In live this is t=0;
+        # in merged backtest this fires at the start of each of the 3 days.
+        # Without this reset, practice backtest benefits from EMA carry-over
+        # that won't exist in live (where each day is a separate submission).
+        if state.timestamp == 0:
+            self._ema_fair = None
+
+        # ---- EMA update + directional signal ----
+        if self._ema_fair is None:
+            self._ema_fair = fair
+        else:
+            self._ema_fair = self.ema_alpha * fair + (1.0 - self.ema_alpha) * self._ema_fair
+        signal = fair - self._ema_fair
 
         # ---- Phase 1: TAKE only when edge >= min_edge ----
         post_take_pos = position
@@ -428,6 +466,14 @@ class PepperRootStrategy(Strategy):
         skew = post_take_pos / self.position_limit
         buy_size = max(0, int(self.base_size * (1.0 - max(0.0, skew))))
         sell_size = max(0, int(self.base_size * (1.0 + min(0.0, skew))))
+
+        # Directional overlay: when EMA says price is drifting, lean into
+        # the drift on the passive-quote side. Dormant when |signal| is
+        # below threshold, so flat markets behave exactly like v1.
+        if signal > self.drift_threshold:
+            buy_size += self.drift_bias_size
+        elif signal < -self.drift_threshold:
+            sell_size += self.drift_bias_size
 
         buy_size = clamp_order_size(post_take_pos, buy_size, self.position_limit)
         sell_size = clamp_order_size(post_take_pos, -sell_size, self.position_limit)
