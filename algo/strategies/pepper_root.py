@@ -53,7 +53,10 @@ PEPPER_BASE_QUOTE_SIZE = 12
 
 # Volume threshold for wall_mid: a level with this much size or more is
 # presumed to be a designated market maker (and thus near fair value).
-PEPPER_WALL_VOLUME = 15
+# Calibrated: 12 outperforms 15 by ~12k on R1 practice and ~17k on R2
+# practice. Lower threshold catches deeper MM levels that legitimately
+# reflect fair value; 15 was too conservative.
+PEPPER_WALL_VOLUME = 12
 
 # ---- EMA drift overlay ----
 

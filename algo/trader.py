@@ -23,6 +23,11 @@ from algo.strategies.pepper_root import PepperRootStrategy
 
 logger = Logger()
 
+# MAF bid for Round 2. Chosen via EV calc in docs/ROUND2/round2_maf_decision.md
+# (anchored to R2 practice PnL 13,096; lift estimate L≈2,300; peak-EV range
+# 500–1,000; 750 picked for robustness to opponent-distribution error).
+MAF_BID_XIREC = 750
+
 
 class Trader:
     def __init__(self) -> None:
@@ -30,6 +35,10 @@ class Trader:
             "ASH_COATED_OSMIUM": OsmiumStrategy(),
             "INTARIAN_PEPPER_ROOT": PepperRootStrategy(),
         }
+
+    def bid(self) -> int:
+        """Market Access Fee bid. See docs/ROUND2/round2_maf_decision.md."""
+        return MAF_BID_XIREC
 
     def run(self, state: TradingState) -> tuple[dict[Symbol, list[Order]], int, str]:
         result: dict[Symbol, list[Order]] = {}

@@ -7,6 +7,7 @@ __pycache__/
 build/
 dist/*
 !dist/bigballers.py
+!dist/round2_submission.py
 *.egg-info/
 .pytest_cache/
 .mypy_cache/

@@ -23,12 +23,15 @@ SOURCES: list[tuple[str, Path]] = [
     ("Trader", REPO_ROOT / "algo" / "trader.py"),
 ]
 
-OUTPUT = REPO_ROOT / "dist" / "bigballers.py"
+OUTPUT = REPO_ROOT / "dist" / "round2_submission.py"
 
-HEADER = '''"""IMC Prosperity 4 - Round 1 submission (flat single-file build).
+HEADER = '''"""IMC Prosperity 4 - Round 2 submission (flat single-file build).
 
 Generated from the modular source at algo/* by scripts/flatten.py.
 DO NOT EDIT DIRECTLY - edit the source files and re-run the flattener.
+
+Round-1 submission is preserved as-is at dist/bigballers.py and must not
+be overwritten by this script.
 """
 '''
 
